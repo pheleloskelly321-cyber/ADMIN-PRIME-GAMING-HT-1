@@ -88,7 +88,6 @@
             background: #21262d;
         }
 
-        /* Style espesyal pou ti foto nan Chat */
         .chat-user-pic {
             width: 35px;
             height: 35px;
@@ -276,7 +275,6 @@
                                 📧 ${data.email || 'Pa gen email'}<br>
                                 📞 ${data.phone || 'N/A'}<br>
                                 🎭 Ròl: ${data.role || 'player'}<br>
-                                🏆 Stats: ${data.stats?.wins || 0} W | ${data.stats?.losses || 0} L<br>
                                 💰 Balans: <span class="amount">${data.balance || 0} HTG</span>
                             </div>
                             <div class="update-box">
@@ -287,29 +285,36 @@
                                 </button>
                             </div>
                         `;
+                    } else if(non === "Chat") {
+                        // RANJE POU LI SENDER_NAME AK TEXT JAN SA YE NAN DATABASE LA
+                        const nonJwè = data.sender_name || data.username || "Jwè";
+                        const mesajJwè = data.text || data.message || "";
+                        const fotoJwè = data.sender_pfp || data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
+                        kontni = `
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <img src="${fotoJwè}" class="chat-user-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                <div>
+                                    <b style="color:#FACC15; font-size:14px;">${nonJwè}:</b>
+                                    <div style="color:white; font-size:13px; margin-top:2px;">${mesajJwè}</div>
+                                </div>
+                            </div>
+                        `;
                     } else if(non === "Prèv Match") {
                         kontni = `<b>📸 Rezilta Match</b><br>Jwè: ${data.username}<br>Match ID: ${data.match_id || 'N/A'}${imgHtml}`;
                     } else if(non === "Depo") {
                         kontni = `<b>💵 Demann Depo</b><br>Jwè: ${data.username}<br>Montan: <span class="amount">${data.amount} HTG</span><br>ID: ${data.transaction_id || 'N/A'}${imgHtml}`;
                     } else if(non === "Retrè") {
                         kontni = `<b>💸 Demann Retrè</b><br>Jwè: ${data.username}<br>Montan: <span class="amount" style="color:var(--danger)">${data.amount} HTG</span>`;
-                    } else if(non === "Chat") {
-                        // KÒD CHAT MODIFYE POU PWOJÈ PRISME
-                        const userPic = data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                        kontni = `
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <img src="${userPic}" class="chat-user-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
-                                <div>
-                                    <b style="color:#FACC15; font-size:14px;">${data.username || 'Jwè'}:</b>
-                                    <div style="color:white; font-size:13px; margin-top:2px;">${data.message || ''}</div>
-                                </div>
-                            </div>
-                        `;
                     } else {
                         kontni = `<div class="info">Done: ${JSON.stringify(data)}</div>`;
                     }
                     area.innerHTML += `<div class="card">${kontni}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
                 });
+                
+                // Si se chat, scroll desann
+                if(non === "Chat") window.scrollTo(0, document.body.scrollHeight);
+                
             }, (error) => {
                 area.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">Erè Firebase: ${error.message}</div>`;
             });
@@ -318,11 +323,11 @@
         window.voyeMesaj = function() {
             const msgInput = document.getElementById('msg');
             if(msgInput.value.trim() !== "") {
-                // Voye mesaj nan chemen 'chat' la ak enfòmasyon Admin
+                // VOYE MESAJ AK BON PARAMÈT YO (sender_name, text)
                 push(ref(db, 'chat'), { 
-                    username: "ADMIN - PRIME", 
-                    message: msgInput.value, 
-                    photoUrl: "https://cdn-icons-png.flaticon.com/512/2206/2206368.png", // Icon Admin
+                    sender_name: "ADMIN - PRIME", 
+                    text: msgInput.value, 
+                    sender_pfp: "https://cdn-icons-png.flaticon.com/512/2206/2206368.png",
                     timestamp: serverTimestamp() 
                 }).then(() => {
                     msgInput.value = "";

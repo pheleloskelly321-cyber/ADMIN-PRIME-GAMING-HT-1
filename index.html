@@ -87,8 +87,9 @@
             border: 2px solid var(--primary);
             background: #21262d;
         }
-        
-        .chat-pic {
+
+        /* Style espesyal pou ti foto nan Chat */
+        .chat-user-pic {
             width: 35px;
             height: 35px;
             border-radius: 50%;
@@ -172,7 +173,7 @@
         <button onclick="chajKategori('admin_controls/accepted_challenges', 'Defi Asepte', this)">Defi Asepte</button>
         <button onclick="chajKategori('admin_requests/match_results', 'Prèv Match', this)">Prèv Match</button>
         <button onclick="chajKategori('users', 'Users', this)">Users</button>
-        <button onclick="chajKategori('messages', 'Chat', this)">Chat</button>
+        <button onclick="chajKategori('chat', 'Chat', this)">Chat</button>
     </div>
 
     <div id="display-area">
@@ -186,7 +187,7 @@
 
     <div id="chat-box" class="chat-input">
         <div class="chat-container">
-            <input type="text" id="msg" placeholder="Ekri mesaj ou la...">
+            <input type="text" id="msg" placeholder="Mesaj piblik...">
             <button class="btn-update" style="background:var(--primary)" onclick="voyeMesaj()">Voye</button>
         </div>
     </div>
@@ -208,7 +209,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         let currentRef = null;
-        let chatPath = "messages"; // Chemen kote mesaj yo ye
 
         window.openModal = (src) => { document.getElementById("myModal").style.display = "flex"; document.getElementById("imgFull").src = src; }
         window.closeModal = () => { document.getElementById("myModal").style.display = "none"; }
@@ -217,19 +217,29 @@
             const inputBal = document.getElementById(`bal-${uid}`);
             const nouvoBalans = inputBal.value;
             if (nouvoBalans === "" || isNaN(nouvoBalans)) return alert("Mete yon chif valab");
+            
             update(ref(db, `users/${uid}`), { balance: Number(nouvoBalans) })
-            .then(() => { alert("Balans lan chanje!"); inputBal.value = ""; });
+            .then(() => {
+                alert("Balans lan chanje!");
+                inputBal.value = ""; 
+            })
+            .catch(err => alert("Erè: " + err.message));
         }
 
         window.banUser = function(uid, isCurrentlyBanned) {
             const newRole = isCurrentlyBanned ? 'player' : 'banned';
-            if(confirm(isCurrentlyBanned ? "Debloke jwè sa?" : "Bloke (Ban) jwè sa?")) {
-                update(ref(db, `users/${uid}`), { role: newRole }).then(() => alert("Reyisi!"));
+            const konfimasyon = isCurrentlyBanned ? "Debloke jwè sa?" : "Bloke (Ban) jwè sa?";
+            
+            if(confirm(konfimasyon)) {
+                update(ref(db, `users/${uid}`), { role: newRole })
+                .then(() => alert("Estati a chanje ak siksè!"))
+                .catch(err => alert("Erè: " + err.message));
             }
         }
 
         window.chajKategori = function(path, non, btn) {
             if (currentRef) off(currentRef);
+            
             document.querySelectorAll('.nav-categories button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
@@ -247,50 +257,76 @@
 
                 snapshot.forEach((child) => {
                     const data = child.val();
+                    const key = child.key;
                     let kontni = "";
-                    const imgUrl = data.proof_img || data.screenshot || data.photoUrl;
+                    
+                    const imgUrl = data.proof_img || data.screenshot || data.photoUrl || data.image_url;
                     const imgHtml = imgUrl ? `<div class="prev-img-container"><img src="${imgUrl}" class="prev-img" onclick="openModal('${imgUrl}')"></div>` : "";
 
                     if(non === "Users") {
                         const isBanned = data.role === 'banned';
+                        const userPhoto = data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        
                         kontni = `
                             <div class="user-header">
-                                <img src="${data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="profile-pic">
-                                <b style="${isBanned ? 'color:var(--danger)' : ''}">${data.username || 'N/A'}</b>
+                                <img src="${userPhoto}" class="profile-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                <b style="${isBanned ? 'color:var(--danger)' : ''}">${data.username || 'N/A'} ${isBanned ? '(BANNED 🚫)' : ''}</b>
                             </div>
-                            <div class="info">💰 Balans: <span class="amount">${data.balance || 0} HTG</span></div>
+                            <div class="info">
+                                📧 ${data.email || 'Pa gen email'}<br>
+                                📞 ${data.phone || 'N/A'}<br>
+                                🎭 Ròl: ${data.role || 'player'}<br>
+                                🏆 Stats: ${data.stats?.wins || 0} W | ${data.stats?.losses || 0} L<br>
+                                💰 Balans: <span class="amount">${data.balance || 0} HTG</span>
+                            </div>
                             <div class="update-box">
-                                <input type="number" id="bal-${child.key}" placeholder="Balans">
-                                <button class="btn-update" onclick="updateBalance('${child.key}')">OK</button>
-                                <button class="${isBanned ? 'btn-unban' : 'btn-ban'}" onclick="banUser('${child.key}', ${isBanned})">${isBanned ? 'Unban' : 'Ban'}</button>
-                            </div>`;
+                                <input type="number" id="bal-${key}" placeholder="Nouvo balans">
+                                <button class="btn-update" onclick="updateBalance('${key}')">OK</button>
+                                <button class="${isBanned ? 'btn-unban' : 'btn-ban'}" onclick="banUser('${key}', ${isBanned})">
+                                    ${isBanned ? 'Unban' : 'Ban'}
+                                </button>
+                            </div>
+                        `;
+                    } else if(non === "Prèv Match") {
+                        kontni = `<b>📸 Rezilta Match</b><br>Jwè: ${data.username}<br>Match ID: ${data.match_id || 'N/A'}${imgHtml}`;
+                    } else if(non === "Depo") {
+                        kontni = `<b>💵 Demann Depo</b><br>Jwè: ${data.username}<br>Montan: <span class="amount">${data.amount} HTG</span><br>ID: ${data.transaction_id || 'N/A'}${imgHtml}`;
+                    } else if(non === "Retrè") {
+                        kontni = `<b>💸 Demann Retrè</b><br>Jwè: ${data.username}<br>Montan: <span class="amount" style="color:var(--danger)">${data.amount} HTG</span>`;
                     } else if(non === "Chat") {
+                        // KÒD CHAT MODIFYE POU PWOJÈ PRISME
                         const userPic = data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                         kontni = `
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <img src="${userPic}" class="chat-pic">
+                                <img src="${userPic}" class="chat-user-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
                                 <div>
-                                    <b style="color:#FACC15; font-size:13px;">${data.username || 'Anonim'}:</b>
-                                    <div style="color:white; font-size:14px;">${data.message || ''}</div>
+                                    <b style="color:#FACC15; font-size:14px;">${data.username || 'Jwè'}:</b>
+                                    <div style="color:white; font-size:13px; margin-top:2px;">${data.message || ''}</div>
                                 </div>
-                            </div>`;
+                            </div>
+                        `;
                     } else {
-                        kontni = `<div class="info"><b>${data.username || 'Sistèm'}</b><br>${JSON.stringify(data)}</div>${imgHtml}`;
+                        kontni = `<div class="info">Done: ${JSON.stringify(data)}</div>`;
                     }
-                    area.innerHTML += `<div class="card">${kontni}</div>`;
+                    area.innerHTML += `<div class="card">${kontni}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
                 });
+            }, (error) => {
+                area.innerHTML = `<div style="color:var(--danger); padding:20px; text-align:center;">Erè Firebase: ${error.message}</div>`;
             });
         }
 
         window.voyeMesaj = function() {
             const msgInput = document.getElementById('msg');
             if(msgInput.value.trim() !== "") {
-                push(ref(db, chatPath), { 
+                // Voye mesaj nan chemen 'chat' la ak enfòmasyon Admin
+                push(ref(db, 'chat'), { 
                     username: "ADMIN - PRIME", 
                     message: msgInput.value, 
-                    photoUrl: "https://cdn-icons-png.flaticon.com/512/2206/2206368.png",
+                    photoUrl: "https://cdn-icons-png.flaticon.com/512/2206/2206368.png", // Icon Admin
                     timestamp: serverTimestamp() 
-                }).then(() => { msgInput.value = ""; });
+                }).then(() => {
+                    msgInput.value = "";
+                });
             }
         }
     </script>

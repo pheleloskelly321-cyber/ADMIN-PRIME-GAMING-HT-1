@@ -265,7 +265,6 @@
                     if(non === "Users") {
                         const isBanned = data.role === 'banned';
                         const userPhoto = data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                        // Jere Wins ak Losses si yo egziste
                         const wins = (data.stats && data.stats.wins) ? data.stats.wins : 0;
                         const losses = (data.stats && data.stats.losses) ? data.stats.losses : 0;
                         
@@ -290,12 +289,19 @@
                             </div>
                         `;
                     } else if(non === "Defi Lage") {
+                        // MODIFIKASYON KONPLÈ POU DEFI LAGE
                         kontni = `
-                            <b>🔥 Defi Disponib</b><br>
-                            Jwè: ${data.username || 'N/A'}<br>
-                            Miz: <span class="amount">${data.amount || 0} HTG</span><br>
-                            Konsole: ${data.console || 'N/A'}<br>
-                            Match: ${data.game_type || 'N/A'}
+                            <div class="user-header">
+                                <img src="${data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="chat-user-pic">
+                                <b>${data.username || 'N/A'}</b>
+                            </div>
+                            <div class="info">
+                                🎮 <b>Jwèt:</b> ${data.game_type || data.game || 'N/A'}<br>
+                                🕹️ <b>Konsole:</b> ${data.console || 'N/A'}<br>
+                                💰 <b>Miz:</b> <span class="amount">${data.amount || 0} HTG</span><br>
+                                📝 <b>Deskripsyon:</b> ${data.description || 'Pa gen deskripsyon'}<br>
+                                📅 <b>Lè:</b> ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}
+                            </div>
                         `;
                     } else if(non === "Defi Asepte") {
                         kontni = `

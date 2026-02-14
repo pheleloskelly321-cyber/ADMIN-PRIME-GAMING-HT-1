@@ -13,6 +13,8 @@
             --text: #F9FAFB;
             --danger: #EF4444;
             --modal-bg: rgba(0, 0, 0, 0.9);
+            --admin-msg: #1E3A8A;
+            --user-msg: #30363D;
         }
 
         body { 
@@ -72,6 +74,33 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
+        /* Styles pou Chat */
+        .chat-bubble {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 10px;
+            max-width: 85%;
+        }
+
+        .chat-bubble.admin {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .msg-content {
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .admin .msg-content { background: var(--admin-msg); color: white; border-bottom-right-radius: 2px; }
+        .user .msg-content { background: var(--user-msg); color: white; border-bottom-left-radius: 2px; }
+
+        .sender-name { font-size: 11px; margin-bottom: 4px; color: #8B949E; display: block; }
+        .admin .sender-name { text-align: right; color: var(--primary); }
+
         .user-header {
             display: flex;
             align-items: center;
@@ -94,6 +123,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1.5px solid var(--accent);
+            flex-shrink: 0;
         }
 
         .card b { color: var(--primary); margin: 0; font-size: 16px; }
@@ -269,75 +299,88 @@
                         const losses = (data.stats && data.stats.losses) ? data.stats.losses : 0;
                         
                         kontni = `
-                            <div class="user-header">
-                                <img src="${userPhoto}" class="profile-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
-                                <b style="${isBanned ? 'color:var(--danger)' : ''}">${data.username || 'N/A'} ${isBanned ? '(BANNED 🚫)' : ''}</b>
-                            </div>
-                            <div class="info">
-                                📧 ${data.email || 'Pa gen imèl'}<br>
-                                📞 ${data.phone || 'Pa gen nimewo'}<br>
-                                🎭 Ròl: ${data.role || 'player'}<br>
-                                🏆 Wins: <span style="color:var(--accent)">${wins}</span> | Losses: <span style="color:var(--danger)">${losses}</span><br>
-                                💰 Balans: <span class="amount">${data.balance || 0} HTG</span>
-                            </div>
-                            <div class="update-box">
-                                <input type="number" id="bal-${key}" placeholder="Nouvo balans">
-                                <button class="btn-update" onclick="updateBalance('${key}')">OK</button>
-                                <button class="${isBanned ? 'btn-unban' : 'btn-ban'}" onclick="banUser('${key}', ${isBanned})">
-                                    ${isBanned ? 'Unban' : 'Ban'}
-                                </button>
+                            <div class="card">
+                                <div class="user-header">
+                                    <img src="${userPhoto}" class="profile-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                    <b style="${isBanned ? 'color:var(--danger)' : ''}">${data.username || 'N/A'} ${isBanned ? '(BANNED 🚫)' : ''}</b>
+                                </div>
+                                <div class="info">
+                                    📧 ${data.email || 'Pa gen imèl'}<br>
+                                    📞 ${data.phone || 'Pa gen nimewo'}<br>
+                                    🎭 Ròl: ${data.role || 'player'}<br>
+                                    🏆 Wins: <span style="color:var(--accent)">${wins}</span> | Losses: <span style="color:var(--danger)">${losses}</span><br>
+                                    💰 Balans: <span class="amount">${data.balance || 0} HTG</span>
+                                </div>
+                                <div class="update-box">
+                                    <input type="number" id="bal-${key}" placeholder="Nouvo balans">
+                                    <button class="btn-update" onclick="updateBalance('${key}')">OK</button>
+                                    <button class="${isBanned ? 'btn-unban' : 'btn-ban'}" onclick="banUser('${key}', ${isBanned})">
+                                        ${isBanned ? 'Unban' : 'Ban'}
+                                    </button>
+                                </div>
+                                <div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div>
                             </div>
                         `;
+                        area.innerHTML += kontni;
                     } else if(non === "Defi Lage") {
-                        // MODIFIKASYON KONPLÈ POU DEFI LAGE
                         kontni = `
-                            <div class="user-header">
-                                <img src="${data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="chat-user-pic">
-                                <b>${data.username || 'N/A'}</b>
-                            </div>
-                            <div class="info">
-                                🎮 <b>Jwèt:</b> ${data.game_type || data.game || 'N/A'}<br>
-                                🕹️ <b>Konsole:</b> ${data.console || 'N/A'}<br>
-                                💰 <b>Miz:</b> <span class="amount">${data.amount || 0} HTG</span><br>
-                                📝 <b>Deskripsyon:</b> ${data.description || 'Pa gen deskripsyon'}<br>
-                                📅 <b>Lè:</b> ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}
+                            <div class="card">
+                                <div class="user-header">
+                                    <img src="${data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="chat-user-pic">
+                                    <b>${data.username || 'N/A'}</b>
+                                </div>
+                                <div class="info">
+                                    🎮 <b>Jwèt:</b> ${data.game_type || data.game || 'N/A'}<br>
+                                    🕹️ <b>Konsole:</b> ${data.console || 'N/A'}<br>
+                                    💰 <b>Miz:</b> <span class="amount">${data.amount || 0} HTG</span><br>
+                                    📝 <b>Deskripsyon:</b> ${data.description || 'Pa gen deskripsyon'}<br>
+                                    📅 <b>Lè:</b> ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}
+                                </div>
+                                <div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div>
                             </div>
                         `;
-                    } else if(non === "Defi Asepte") {
-                        kontni = `
-                            <b style="color:var(--accent)">🤝 Match an Kou</b><br>
-                            <div class="info">
-                                🏠 Mèt Defi: ${data.creator_name || 'N/A'}<br>
-                                ⚔️ Jwè ki Asepte: ${data.joiner_name || 'N/A'}<br>
-                                💰 Total: <span class="amount">${data.total_pot || 0} HTG</span><br>
-                                🎮 Match: ${data.game || 'N/A'}<br>
-                                🆔 Match ID: ${data.match_id || key}
-                            </div>
-                        `;
+                        area.innerHTML += kontni;
                     } else if(non === "Chat") {
-                        const nonJwè = data.sender_name || data.username || "Jwè";
-                        const mesajJwè = data.text || data.message || "";
-                        const fotoJwè = data.sender_pfp || data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        const isMe = data.sender_name === "ADMIN - PRIME";
+                        const nonJwè = data.sender_name || "Jwè";
+                        const mesajJwè = data.text || "";
+                        const fotoJwè = data.sender_pfp || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
                         kontni = `
-                            <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="chat-bubble ${isMe ? 'admin' : 'user'}">
                                 <img src="${fotoJwè}" class="chat-user-pic" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
                                 <div>
-                                    <b style="color:#FACC15; font-size:14px;">${nonJwè}:</b>
-                                    <div style="color:white; font-size:13px; margin-top:2px;">${mesajJwè}</div>
+                                    <span class="sender-name">${isMe ? 'Ou' : nonJwè}</span>
+                                    <div class="msg-content">${mesajJwè}</div>
                                 </div>
                             </div>
                         `;
+                        area.innerHTML += kontni;
+                    } else if(non === "Defi Asepte") {
+                        kontni = `
+                            <div class="card">
+                                <b style="color:var(--accent)">🤝 Match an Kou</b><br>
+                                <div class="info">
+                                    🏠 Mèt Defi: ${data.creator_name || 'N/A'}<br>
+                                    ⚔️ Jwè ki Asepte: ${data.joiner_name || 'N/A'}<br>
+                                    💰 Total: <span class="amount">${data.total_pot || 0} HTG</span><br>
+                                    🎮 Match: ${data.game || 'N/A'}<br>
+                                    🆔 Match ID: ${data.match_id || key}
+                                </div>
+                                <div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div>
+                            </div>
+                        `;
+                        area.innerHTML += kontni;
                     } else if(non === "Prèv Match") {
-                        kontni = `<b>📸 Rezilta Match</b><br>Jwè: ${data.username}<br>Match ID: ${data.match_id || 'N/A'}${imgHtml}`;
+                        kontni = `<div class="card"><b>📸 Rezilta Match</b><br>Jwè: ${data.username}<br>Match ID: ${data.match_id || 'N/A'}${imgHtml}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
+                        area.innerHTML += kontni;
                     } else if(non === "Depo") {
-                        kontni = `<b>💵 Demann Depo</b><br>Jwè: ${data.username}<br>Montan: <span class="amount">${data.amount} HTG</span><br>ID: ${data.transaction_id || 'N/A'}${imgHtml}`;
+                        kontni = `<div class="card"><b>💵 Demann Depo</b><br>Jwè: ${data.username}<br>Montan: <span class="amount">${data.amount} HTG</span><br>ID: ${data.transaction_id || 'N/A'}${imgHtml}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
+                        area.innerHTML += kontni;
                     } else if(non === "Retrè") {
-                        kontni = `<b>💸 Demann Retrè</b><br>Jwè: ${data.username}<br>Montan: <span class="amount" style="color:var(--danger)">${data.amount} HTG</span>`;
-                    } else {
-                        kontni = `<div class="info">Done: ${JSON.stringify(data)}</div>`;
+                        kontni = `<div class="card"><b>💸 Demann Retrè</b><br>Jwè: ${data.username}<br>Montan: <span class="amount" style="color:var(--danger)">${data.amount} HTG</span><div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
+                        area.innerHTML += kontni;
                     }
-                    area.innerHTML += `<div class="card">${kontni}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
                 });
                 
                 if(non === "Chat") window.scrollTo(0, document.body.scrollHeight);

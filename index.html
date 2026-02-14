@@ -265,6 +265,9 @@
                     if(non === "Users") {
                         const isBanned = data.role === 'banned';
                         const userPhoto = data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        // Jere Wins ak Losses si yo egziste
+                        const wins = (data.stats && data.stats.wins) ? data.stats.wins : 0;
+                        const losses = (data.stats && data.stats.losses) ? data.stats.losses : 0;
                         
                         kontni = `
                             <div class="user-header">
@@ -272,9 +275,10 @@
                                 <b style="${isBanned ? 'color:var(--danger)' : ''}">${data.username || 'N/A'} ${isBanned ? '(BANNED 🚫)' : ''}</b>
                             </div>
                             <div class="info">
-                                📧 ${data.email || 'Pa gen email'}<br>
-                                📞 ${data.phone || 'N/A'}<br>
+                                📧 ${data.email || 'Pa gen imèl'}<br>
+                                📞 ${data.phone || 'Pa gen nimewo'}<br>
                                 🎭 Ròl: ${data.role || 'player'}<br>
+                                🏆 Wins: <span style="color:var(--accent)">${wins}</span> | Losses: <span style="color:var(--danger)">${losses}</span><br>
                                 💰 Balans: <span class="amount">${data.balance || 0} HTG</span>
                             </div>
                             <div class="update-box">
@@ -285,8 +289,26 @@
                                 </button>
                             </div>
                         `;
+                    } else if(non === "Defi Lage") {
+                        kontni = `
+                            <b>🔥 Defi Disponib</b><br>
+                            Jwè: ${data.username || 'N/A'}<br>
+                            Miz: <span class="amount">${data.amount || 0} HTG</span><br>
+                            Konsole: ${data.console || 'N/A'}<br>
+                            Match: ${data.game_type || 'N/A'}
+                        `;
+                    } else if(non === "Defi Asepte") {
+                        kontni = `
+                            <b style="color:var(--accent)">🤝 Match an Kou</b><br>
+                            <div class="info">
+                                🏠 Mèt Defi: ${data.creator_name || 'N/A'}<br>
+                                ⚔️ Jwè ki Asepte: ${data.joiner_name || 'N/A'}<br>
+                                💰 Total: <span class="amount">${data.total_pot || 0} HTG</span><br>
+                                🎮 Match: ${data.game || 'N/A'}<br>
+                                🆔 Match ID: ${data.match_id || key}
+                            </div>
+                        `;
                     } else if(non === "Chat") {
-                        // RANJE POU LI SENDER_NAME AK TEXT JAN SA YE NAN DATABASE LA
                         const nonJwè = data.sender_name || data.username || "Jwè";
                         const mesajJwè = data.text || data.message || "";
                         const fotoJwè = data.sender_pfp || data.photoUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
@@ -312,7 +334,6 @@
                     area.innerHTML += `<div class="card">${kontni}<div class="info" style="font-size:9px; opacity:0.4; margin-top:8px;">REF: ${key}</div></div>`;
                 });
                 
-                // Si se chat, scroll desann
                 if(non === "Chat") window.scrollTo(0, document.body.scrollHeight);
                 
             }, (error) => {
@@ -323,7 +344,6 @@
         window.voyeMesaj = function() {
             const msgInput = document.getElementById('msg');
             if(msgInput.value.trim() !== "") {
-                // VOYE MESAJ AK BON PARAMÈT YO (sender_name, text)
                 push(ref(db, 'chat'), { 
                     sender_name: "ADMIN - PRIME", 
                     text: msgInput.value, 
